@@ -94,7 +94,7 @@ export default function AIAssistant() {
   return (
     <div className="relative min-h-screen bg-neutral-50/50 dark:bg-[#141414] pt-28 pb-10 px-6 overflow-hidden flex flex-col transition-colors duration-500">
       {/* Aesthetic Background Elements */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-crimson-100/30 rounded-full blur-[100px] animate-float dark:hidden dark:hidden" />
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-crimson-100/30 rounded-full blur-[100px] animate-float dark:hidden" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-50/50 rounded-full blur-[100px] animate-float dark:hidden" style={{ animationDelay: '2s' }} />
 
       <div className="relative max-w-4xl w-full mx-auto flex-1 flex flex-col z-10 animate-fade-in-up">

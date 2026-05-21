@@ -17,32 +17,28 @@ export default function Login() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    console.log('🚀 Login attempt started for:', email);
 
     try {
-      console.log('📡 Posting to /api/auth/login with baseURL:', axios.defaults.baseURL);
       const res = await axios.post('/api/auth/login', { email, password });
-      
-      console.log('📥 Response received, status:', res.status);
-      console.log('📄 Data:', res.data);
-      
-      console.log('✅ Login successful!');
       login(res.data.user, res.data.token);
-      navigate('/');
+
+      const role = res.data.user?.role;
+      if (role === 'admin')         navigate('/admin/dashboard');
+      else if (role === 'hospital') navigate('/dashboard/hospital');
+      else                          navigate('/dashboard/donor');
     } catch (err) {
-      console.error('❌ Login error:', err.response?.data?.error || err.message);
       setError(err.response?.data?.error || 'Login failed. Please check your connection.');
     } finally {
       setLoading(false);
-      console.log('🏁 Login attempt finished.');
     }
   };
+
 
   return (
     <div className="relative min-h-[calc(100vh-64px)] flex items-center justify-center p-6 overflow-hidden bg-neutral-50/50 dark:bg-[#0a0a0a]">
       {/* Aesthetic Background Elements */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-crimson-100/50 rounded-full blur-[100px] animate-float dark:hidden dark:hidden" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-crimson-50/50 rounded-full blur-[100px] animate-float dark:hidden dark:hidden" style={{ animationDelay: '2s' }} />
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-crimson-100/50 rounded-full blur-[100px] animate-float dark:hidden" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-crimson-50/50 rounded-full blur-[100px] animate-float dark:hidden" style={{ animationDelay: '2s' }} />
 
       <div className="relative w-full max-w-lg glass p-10 rounded-[2rem] animate-fade-in-up">
         <div className="text-center mb-10">

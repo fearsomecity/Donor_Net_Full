@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import { Calendar, Clock, MapPin, CheckCircle2, ArrowRight, Hospital, ChevronRight } from 'lucide-react';
-import axios from 'axios';
+import { fetchAPI } from '../utils/apiClient';
 
 export default function BookAppointment() {
   const { user } = useAuthStore();
@@ -20,15 +20,22 @@ export default function BookAppointment() {
     // Fetch nearby hospitals (mocking search for now by zip code)
     const fetchHospitals = async () => {
       try {
-        // In a real app, this would be a search endpoint
-        // For now, we'll fetch all hospitals or mock a list
-        setHospitals([
-          { id: 'hosp1', name: 'City General Hospital', address: '123 Medical Dr', zip: '90001' },
-          { id: 'hosp2', name: 'St. Mary\'s Blood Center', address: '456 Health St', zip: '90001' },
-          { id: 'hosp3', name: 'Unity Health Plaza', address: '789 Care Ave', zip: '90002' }
-        ]);
+        const res = await fetchAPI('/api/hospitals');
+        const data = await res.json();
+        if (res.ok) {
+          // Map to match the expected schema in UI
+          const formattedHospitals = data.map(h => ({
+            id: h._id,
+            name: h.hospitalProfile?.hospitalName || 'Unknown Hospital',
+            address: h.hospitalProfile?.address || 'Address not provided',
+            zip: h.hospitalProfile?.zipCode || ''
+          }));
+          setHospitals(formattedHospitals);
+        } else {
+          console.error('Failed to fetch hospitals:', data.message);
+        }
       } catch (err) {
-        console.error(err);
+        console.error('Error fetching hospitals:', err);
       }
     };
     fetchHospitals();
@@ -38,19 +45,25 @@ export default function BookAppointment() {
     setLoading(true);
     setError('');
     try {
-      const token = localStorage.getItem('token');
-      await axios.post('/api/donors/appointments', {
-        hospitalId: selectedHospital.id,
-        hospitalName: selectedHospital.name,
-        date,
-        time,
-        bloodType: user?.profile?.bloodType || ''
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
+      const res = await fetchAPI('/api/donors/appointments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          hospitalId: selectedHospital.id,
+          hospitalName: selectedHospital.name,
+          date,
+          time,
+          bloodType: user?.profile?.bloodType || ''
+        })
       });
-      setStep(4); // Success step
+      const data = await res.json();
+      if (res.ok) {
+        setStep(4); // Success step
+      } else {
+        setError(data.message || 'Failed to book appointment');
+      }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to book appointment');
+      setError('Network error. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -61,7 +74,7 @@ export default function BookAppointment() {
   return (
     <div className="relative min-h-screen bg-neutral-50/50 dark:bg-[#0a0a0a] pt-32 pb-20 px-6 overflow-hidden">
       {/* Background Blobs */}
-      <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-crimson-100/30 rounded-full blur-[100px] animate-float dark:hidden dark:hidden" />
+      <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-crimson-100/30 rounded-full blur-[100px] animate-float dark:hidden" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[30%] h-[30%] bg-blue-50/50 rounded-full blur-[100px] animate-float dark:hidden" style={{ animationDelay: '3s' }} />
 
       <div className="relative max-w-2xl mx-auto z-10">
@@ -212,7 +225,7 @@ export default function BookAppointment() {
                   Thank you for your commitment. You'll receive a reminder 24 hours before your session.
                 </p>
                 <button 
-                  onClick={() => navigate('/donor/dashboard')}
+                  onClick={() => navigate('/dashboard/donor')}
                   className="btn-primary w-full flex items-center justify-center gap-2"
                 >
                   Return to Dashboard <ArrowRight className="w-4 h-4" />

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Heart, ShieldCheck, Zap, Users, ArrowRight, Activity, MapPin, Calendar } from 'lucide-react';
+import { Heart, ShieldCheck, Zap, Users, ArrowRight, Activity, MapPin, Building2, Lock } from 'lucide-react';
 
 export default function Home() {
   return (
@@ -7,13 +7,13 @@ export default function Home() {
       {/* ── Hero Section ───────────────────────────────────────────── */}
       <section className="relative pt-40 pb-32 px-8 flex-1 flex flex-col items-center justify-center overflow-hidden bg-neutral-50/30 dark:bg-[#0a0a0a] transition-colors duration-300">
         {/* Aesthetic Background Elements */}
-        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-crimson-100/30 rounded-full blur-[120px] animate-float dark:hidden dark:hidden" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-crimson-50/30 rounded-full blur-[120px] animate-float dark:hidden dark:hidden" style={{ animationDelay: '3s' }} />
+        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-crimson-100/30 rounded-full blur-[120px] animate-float dark:hidden" />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-crimson-50/30 rounded-full blur-[120px] animate-float dark:hidden" style={{ animationDelay: '3s' }} />
 
         <div className="relative max-w-4xl mx-auto text-center z-10 animate-fade-in-up">
           <div className="inline-flex items-center gap-3 bg-white/80 dark:bg-[#141414] backdrop-blur-md dark:backdrop-blur-none border border-crimson-100 dark:border-[#2a2a2a] text-crimson-700 dark:text-crimson-500 text-[10px] font-bold px-4 py-1.5 rounded-full mb-10 tracking-widest uppercase shadow-sm dark:shadow-none">
             <span className="w-2 h-2 rounded-full bg-crimson-500 animate-pulse" />
-            The Future of Blood Donation
+            India's Real-Time Blood Network
           </div>
 
           <h1 className="text-6xl md:text-8xl font-black text-neutral-900 dark:text-white leading-[1.05] tracking-tightest mb-8 font-header">
@@ -21,29 +21,36 @@ export default function Home() {
           </h1>
 
           <p className="text-xl text-neutral-500 leading-relaxed max-w-2xl mx-auto mb-12 font-medium">
-            DonorNet bridges the gap between donors and hospitals through real-time matching, intelligent tracking, and emergency alerts.
+            Connecting verified donors and licensed hospitals across India — with privacy-first emergency matching, NBTC-compliant onboarding, and real-time inventory transfers.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-            <Link to="/register/donor" className="btn-primary w-full sm:w-auto px-10 py-4 text-lg">
-              Donate Blood
+            <Link to="/register/donor"
+              className="btn-primary w-full sm:w-auto px-10 py-4 text-lg flex items-center gap-3 group">
+              <Heart className="w-5 h-5 fill-white group-hover:scale-110 transition-transform" />
+              Register as a Donor
             </Link>
-            <Link to="/register/hospital" className="w-full sm:w-auto px-10 py-4 text-lg bg-white dark:bg-[#0a0a0a] border-2 border-neutral-100 dark:border-[#2a2a2a] text-neutral-800 dark:text-neutral-100 font-bold rounded-xl hover:bg-neutral-50 dark:hover:border-white transition-all shadow-sm dark:shadow-none">
-              Request Blood
+            <Link to="/register/hospital"
+              className="w-full sm:w-auto px-10 py-4 text-lg bg-white dark:bg-[#0a0a0a] border-2 border-neutral-200 dark:border-[#2a2a2a] text-neutral-800 dark:text-neutral-100 font-bold rounded-xl hover:bg-neutral-50 dark:hover:border-neutral-500 transition-all shadow-sm dark:shadow-none flex items-center justify-center gap-3 group">
+              <Building2 className="w-5 h-5 text-neutral-500 group-hover:text-neutral-800 dark:group-hover:text-white transition-colors" />
+              Hospital Onboarding
             </Link>
           </div>
           
-          {/* Quick Action Buttons */}
-          <div className="mt-20 flex flex-wrap justify-center gap-6">
-            <Link to="/donor/urgent-needs" className="flex items-center gap-3 px-6 py-4 glass dark:!bg-[#141414] dark:!border-[#2a2a2a] rounded-2xl hover:border-crimson-500 dark:hover:border-crimson-500 text-neutral-900 dark:text-neutral-100 font-bold transition-all hover:-translate-y-1 hover:shadow-lg dark:hover:shadow-crimson-900/20 shadow-sm dark:shadow-none">
-              <Activity className="w-5 h-5 text-crimson-600 dark:text-crimson-500" /> Live Tracking
-            </Link>
-            <Link to="/donor/eligibility" className="flex items-center gap-3 px-6 py-4 glass dark:!bg-[#141414] dark:!border-[#2a2a2a] rounded-2xl hover:border-crimson-500 dark:hover:border-crimson-500 text-neutral-900 dark:text-neutral-100 font-bold transition-all hover:-translate-y-1 hover:shadow-lg dark:hover:shadow-crimson-900/20 shadow-sm dark:shadow-none">
-              <MapPin className="w-5 h-5 text-crimson-600 dark:text-crimson-500" /> Smart Matching
-            </Link>
-            <Link to="/donor/book-appointment" className="flex items-center gap-3 px-6 py-4 glass dark:!bg-[#141414] dark:!border-[#2a2a2a] rounded-2xl hover:border-crimson-500 dark:hover:border-crimson-500 text-neutral-900 dark:text-neutral-100 font-bold transition-all hover:-translate-y-1 hover:shadow-lg dark:hover:shadow-crimson-900/20 shadow-sm dark:shadow-none">
-              <Calendar className="w-5 h-5 text-crimson-600 dark:text-crimson-500" /> Instant Booking
-            </Link>
+          {/* Trust Badges */}
+          <div className="mt-20 flex flex-wrap justify-center gap-4">
+            <div className="flex items-center gap-3 px-6 py-3 glass dark:!bg-[#141414] dark:!border-[#2a2a2a] rounded-2xl shadow-sm dark:shadow-none">
+              <ShieldCheck className="w-5 h-5 text-crimson-600 dark:text-crimson-500" />
+              <span className="text-sm font-bold text-neutral-700 dark:text-neutral-300">NBTC Compliant</span>
+            </div>
+            <div className="flex items-center gap-3 px-6 py-3 glass dark:!bg-[#141414] dark:!border-[#2a2a2a] rounded-2xl shadow-sm dark:shadow-none">
+              <Lock className="w-5 h-5 text-crimson-600 dark:text-crimson-500" />
+              <span className="text-sm font-bold text-neutral-700 dark:text-neutral-300">Privacy-First</span>
+            </div>
+            <div className="flex items-center gap-3 px-6 py-3 glass dark:!bg-[#141414] dark:!border-[#2a2a2a] rounded-2xl shadow-sm dark:shadow-none">
+              <Activity className="w-5 h-5 text-crimson-600 dark:text-crimson-500" />
+              <span className="text-sm font-bold text-neutral-700 dark:text-neutral-300">Real-Time Matching</span>
+            </div>
           </div>
         </div>
       </section>
@@ -63,19 +70,19 @@ export default function Home() {
           <div className="grid md:grid-cols-3 gap-10">
             <FeatureCard 
               icon={<Users className="w-8 h-8" />}
-              title="Quick Register"
-              desc="Create your profile in seconds. We handle the eligibility matching automatically."
+              title="NBTC-Compliant Signup"
+              desc="Donors complete a health self-declaration checklist. Hospitals submit CDSCO licenses for admin verification."
             />
             <FeatureCard 
               icon={<Zap className="w-8 h-8" />}
-              title="Real-time Connect"
-              desc="Receive push alerts for urgent blood needs matching your blood type."
+              title="Emergency Matching"
+              desc="Hospitals broadcast urgent needs. Eligible local donors are notified and can accept — their contact is only revealed after they click Accept."
               delay="0.2s"
             />
             <FeatureCard 
               icon={<ShieldCheck className="w-8 h-8" />}
-              title="Save Lives"
-              desc="Complete your donation and track your personal impact history."
+              title="B2B Stock Transfers"
+              desc="Verified hospitals can view nearby blood bank inventories and initiate inter-hospital transfers with a digital manifest."
               delay="0.4s"
             />
           </div>
@@ -83,8 +90,8 @@ export default function Home() {
       </section>
 
       {/* ── Stats ──────────────────────────────────────────────────── */}
-      <section className="py-32 px-8 bg-neutral-900 dark:bg-[#0a0a0a] border-y dark:border-transparent text-white rounded-[3rem] mx-6 mb-32 overflow-hidden relative">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-crimson-600/20 blur-[100px] dark:hidden dark:hidden" />
+      <section className="py-32 px-8 bg-white dark:bg-[#0a0a0a] border border-neutral-100 dark:border-[#2a2a2a] text-neutral-900 dark:text-white rounded-[3rem] mx-6 mb-32 overflow-hidden relative shadow-2xl shadow-neutral-200/50 dark:shadow-none">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-crimson-600/20 blur-[100px] dark:hidden" />
         <div className="max-w-6xl mx-auto relative z-10">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
             <Stat value="12,500+" label="Verified Donors" />
@@ -97,17 +104,20 @@ export default function Home() {
 
       {/* ── CTA ────────────────────────────────────────────────────── */}
       <section className="px-8 pb-32">
-        <div className="max-w-5xl mx-auto glass-dark rounded-[3rem] py-20 px-12 text-center text-white relative overflow-hidden">
-          <div className="absolute top-[-50%] right-[-10%] w-[60%] h-[100%] bg-crimson-600/20 blur-[100px] dark:hidden animate-float dark:hidden" />
+        <div className="max-w-5xl mx-auto glass rounded-[3rem] py-20 px-12 text-center text-neutral-900 dark:text-white relative overflow-hidden border border-neutral-100 dark:border-[#2a2a2a] shadow-2xl shadow-neutral-200/50 dark:shadow-none">
+          <div className="absolute top-[-50%] right-[-10%] w-[60%] h-[100%] bg-crimson-600/20 blur-[100px] dark:hidden animate-float" />
           <h2 className="text-5xl font-bold mb-6 font-header">
             Start Your <span className="text-crimson-500">Lifesaving</span> Journey
           </h2>
-          <p className="text-neutral-400 text-xl font-medium mb-12 max-w-xl mx-auto">
+          <p className="text-neutral-500 dark:text-neutral-400 text-xl font-medium mb-12 max-w-xl mx-auto">
             Join the most technologically advanced blood network. It takes less than 2 minutes.
           </p>
           <div className="flex flex-wrap justify-center gap-6">
-            <Link to="/register/donor" className="btn-primary px-12 py-5 text-lg flex items-center gap-3">
-              Get Started Free <ArrowRight className="w-5 h-5" />
+            <Link to="/register/donor" className="btn-primary px-10 py-5 text-lg flex items-center gap-3">
+              <Heart className="w-5 h-5 fill-white" /> Register as a Donor
+            </Link>
+            <Link to="/register/hospital" className="px-10 py-5 text-lg flex items-center gap-3 bg-neutral-100 dark:bg-white/10 border-2 border-neutral-200 dark:border-white/20 text-neutral-900 dark:text-white font-bold rounded-xl hover:bg-neutral-200 dark:hover:bg-white/20 transition-all">
+              <Building2 className="w-5 h-5" /> Hospital Onboarding <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         </div>
@@ -133,7 +143,7 @@ function FeatureCard({ icon, title, desc, delay = "0s" }) {
 function Stat({ value, label }) {
   return (
     <div className="text-center group">
-      <div className="text-5xl font-black text-white mb-3 group-hover:text-crimson-500 transition-colors duration-500 font-header">{value}</div>
+      <div className="text-5xl font-black text-neutral-900 dark:text-white mb-3 group-hover:text-crimson-500 transition-colors duration-500 font-header">{value}</div>
       <div className="text-xs text-neutral-400 uppercase tracking-widest font-bold">{label}</div>
     </div>
   );

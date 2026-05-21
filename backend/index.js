@@ -21,8 +21,8 @@ app.use((req, res, next) => {
 // ── MongoDB connection (Shared) ───────────────────────────────────────────
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/donornet';
 console.log(`📡 Attempting MongoDB connection to: ${MONGO_URI.replace(/\/\/.*@/, '//****@')}`);
-
-mongoose.set('bufferCommands', false);
+// Enable buffering so queries wait for MongoDB to connect instead of throwing immediately
+mongoose.set('bufferCommands', true);
 mongoose.connect(MONGO_URI)
   .then(() => console.log('✅ Unified Backend: Shared MongoDB connected successfully'))
   .catch((err) => {
@@ -52,7 +52,7 @@ A user is asking: "${message}"
 Provide a helpful, concise, and scientifically accurate answer about blood donation, hospital features, or medical concerns. Keep your answer encouraging and under 100 words.`;
 
   // Recommended production models with maximum fallback robustness:
-  const modelCandidates = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-latest', 'gemini-pro'];
+  const modelCandidates = ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash', 'gemini-flash-latest'];
 
   const key = process.env.GEMINI_API_KEY;
   if (!key) {
@@ -73,17 +73,18 @@ Provide a helpful, concise, and scientifically accurate answer about blood donat
     } catch (error) {
       console.error(`❌ Model ${modelName} failed: ${error.message}`);
       lastError = error;
-      // Wait and try fallback if rate-limited, else log and move on
       if (error.message?.includes('429') || error.message?.includes('RESOURCE_EXHAUSTED')) {
-        console.warn(`⚠️ Rate limit hit for ${modelName}`);
-        
-        // Immediately return 429 if we hit it, because quotas apply globally to the API Key
-        return res.status(429).json({ 
-          error: 'Your Google Gemini API free-tier quota has been exhausted or is set to 0 in your region. Please check your Google AI Studio billing.',
-          details: error.message
-        });
+        console.warn(`⚠️ Rate limit hit for ${modelName}, trying fallback model...`);
       }
     }
+  }
+
+  // If ALL models failed, check if the last error was a quota issue
+  if (lastError?.message?.includes('429') || lastError?.message?.includes('RESOURCE_EXHAUSTED')) {
+    return res.status(429).json({ 
+      error: 'Your Google Gemini API free-tier quota is completely exhausted or unavailable in your region. Please check your Google AI Studio billing.',
+      details: lastError.message
+    });
   }
 
   res.status(500).json({ 
@@ -95,23 +96,26 @@ Provide a helpful, concise, and scientifically accurate answer about blood donat
 // ── Unified Routes ─────────────────────────────────────────────────────────
 
 // Each service's router is mounted under the prefix previously handled by the API Gateway.
-// Note: We use the existing router files directly.
+// Consolidated monolith routes:
 
 // Auth Service — specific sub-routes first
-app.use('/api/auth/notifications', require('./auth-service/routes/notifications'));
-app.use('/api/auth', require('./auth-service/routes/auth'));
+app.use('/api/auth/notifications', require('./routes/notifications'));
+app.use('/api/auth', require('./routes/auth'));
+
+// Admin Service
+app.use('/api/admin', require('./routes/admin'));
 
 // Donor Service — specific sub-routes first
-app.use('/api/donors/appointments', require('./donor-service/routes/appointments'));
-app.use('/api/donors', require('./donor-service/routes/donor'));
+app.use('/api/donors/appointments', require('./routes/donorAppointments'));
+app.use('/api/donors', require('./routes/donor'));
 
 // Hospital Service — specific sub-routes first
-app.use('/api/hospitals/appointments', require('./hospital-service/routes/appointments'));
-app.use('/api/hospitals', require('./hospital-service/routes/hospital'));
+app.use('/api/hospitals/appointments', require('./routes/hospitalAppointments'));
+app.use('/api/hospitals', require('./routes/hospital'));
 
 // Request Service — specific sub-routes first
-app.use('/api/requests/matches', require('./request-service/routes/matching'));
-app.use('/api/requests', require('./request-service/routes/requests'));
+app.use('/api/requests/matches', require('./routes/matching'));
+app.use('/api/requests', require('./routes/requests'));
 
 // ── Global Error Handler ───────────────────────────────────────────────
 app.use((err, req, res, next) => {
@@ -143,3 +147,5 @@ server.on('error', (err) => {
     console.error(`❌ Server Error:`, err.message);
   }
 });
+
+// Trigger restart for node --watch - Atlas DB connected!

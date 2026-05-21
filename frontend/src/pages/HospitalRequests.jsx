@@ -8,12 +8,21 @@ export default function HospitalRequests() {
   const [myRequests, setMyRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [modalError, setModalError] = useState('');
+  const [toast, setToast] = useState(null);
+
+  const showToast = (msg, type = 'success') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3500);
+  };
 
   // New Request Form State
   const [newRequest, setNewRequest] = useState({
     bloodType: 'O-',
     unitsNeeded: 5,
     urgencyLevel: 'high',
+    zipCode: user?.profile?.zipCode || '',
     message: ''
   });
 
@@ -22,11 +31,12 @@ export default function HospitalRequests() {
   const fetchRequests = async () => {
     try {
       setLoading(true);
-      const res = await fetchAPI('/api/requests/hospital', { headers: { 'Authorization': `Bearer ${token}` } });
+      const res = await fetchAPI('/api/requests/hospital');
       const data = await res.json();
-      setMyRequests(data);
+      setMyRequests(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error fetching requests:', err);
+      setMyRequests([]);
     } finally {
       setLoading(false);
     }
@@ -38,25 +48,43 @@ export default function HospitalRequests() {
 
   const handleCreateRequest = async (e) => {
     e.preventDefault();
+    setModalError('');
+
+    const zipCode = newRequest.zipCode || user?.profile?.zipCode || user?.profile?.zip || '';
+    if (!zipCode) {
+      setModalError('Zip code is required. Please enter your hospital\'s zip code.');
+      return;
+    }
+
+    setSubmitting(true);
     try {
       const res = await fetchAPI('/api/requests', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` 
-        },
-        body: JSON.stringify({ 
-          ...newRequest, 
-          zipCode: user?.profile?.zipCode || '90210',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bloodType: newRequest.bloodType,
+          unitsNeeded: newRequest.unitsNeeded,
+          urgencyLevel: newRequest.urgencyLevel,
+          message: newRequest.message,
+          zipCode,
+          city: user?.profile?.city || '',
           hospitalName: user?.profile?.hospitalName || 'City Hospital'
         })
       });
+      const data = await res.json();
       if (res.ok) {
         setShowModal(false);
+        setModalError('');
+        showToast('Request broadcasted successfully!', 'success');
         fetchRequests();
+      } else {
+        setModalError(data.message || 'Failed to create request. Try again.');
       }
     } catch (err) {
       console.error('Error creating request:', err);
+      setModalError('Network error. Please check your connection.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -87,8 +115,19 @@ export default function HospitalRequests() {
 
   return (
     <div className="relative min-h-screen bg-neutral-50/50 dark:bg-[#0a0a0a] pt-32 pb-20 px-6 overflow-hidden">
+      {/* Toast */}
+      {toast && (
+        <div className={`fixed bottom-6 right-6 z-[200] flex items-center gap-3 px-5 py-4 rounded-2xl shadow-xl text-sm font-bold animate-fade-in-up border ${
+          toast.type === 'success'
+            ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800/30'
+            : 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800/30'
+        }`}>
+          {toast.type === 'success' ? <CheckCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+          {toast.msg}
+        </div>
+      )}
       {/* Aesthetic Background Elements */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-crimson-100/30 rounded-full blur-[100px] animate-float dark:hidden dark:hidden" />
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-crimson-100/30 rounded-full blur-[100px] animate-float dark:hidden" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-50/30 rounded-full blur-[100px] animate-float dark:hidden" style={{ animationDelay: '2s' }} />
 
       <div className="relative max-w-6xl mx-auto z-10">
@@ -112,7 +151,7 @@ export default function HospitalRequests() {
         </header>
 
         <div className="glass rounded-[3rem] overflow-hidden shadow-2xl dark:shadow-none shadow-neutral-200/50 dark:shadow-none animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-           <div className="p-10 border-b border-neutral-100 dark:border-[#2a2a2a] flex items-center justify-between bg-white/50">
+           <div className="p-10 border-b border-neutral-100 dark:border-[#2a2a2a] flex items-center justify-between bg-white/50 dark:bg-transparent">
               <h2 className="text-2xl font-black text-neutral-900 dark:text-white font-header flex items-center gap-3">
                 <AlertCircle className="w-6 h-6 text-crimson-600" />
                 Active Broadcasts
@@ -263,16 +302,43 @@ export default function HospitalRequests() {
 
                  <div className="space-y-3">
                     <label className="text-[11px] font-black text-neutral-400 uppercase tracking-widest ml-1">Additional Context (Optional)</label>
-                    <textarea 
+                    <textarea
                       placeholder="Special instructions or patient requirements..."
-                      value={newRequest.message} 
-                      onChange={(e) => setNewRequest({...newRequest, message: e.target.value})} 
-                      className="w-full h-32 p-6 rounded-[2rem] bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-100 dark:border-[#2a2a2a] outline-none text-base font-medium resize-none focus:bg-white dark:bg-[#141414] focus:border-crimson-500 transition-all shadow-inner" 
+                      value={newRequest.message}
+                      onChange={(e) => setNewRequest({...newRequest, message: e.target.value})}
+                      className="w-full h-32 p-6 rounded-[2rem] bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-100 dark:border-[#2a2a2a] outline-none text-base font-medium resize-none focus:bg-white dark:bg-[#141414] focus:border-crimson-500 transition-all shadow-inner"
                     />
                  </div>
 
-                 <button type="submit" className="btn-primary w-full py-6 rounded-[2rem] font-black text-lg shadow-2xl dark:shadow-none shadow-crimson-100 active:scale-95 transition-all">
-                    Broadcast Request
+                 <div className="space-y-2">
+                   <label className="text-[11px] font-black text-neutral-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                     <MapPin className="w-3 h-3" /> Hospital Zip Code
+                   </label>
+                   <input
+                     type="text"
+                     required
+                     value={newRequest.zipCode}
+                     onChange={(e) => setNewRequest({...newRequest, zipCode: e.target.value})}
+                     placeholder="e.g. 110001"
+                     className="w-full h-14 px-6 rounded-2xl bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-100 dark:border-[#2a2a2a] outline-none font-bold focus:bg-white dark:bg-[#141414] focus:border-crimson-500 transition-all"
+                   />
+                 </div>
+
+                 {modalError && (
+                   <div className="flex items-center gap-3 p-4 rounded-2xl bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 text-sm font-bold border border-red-100 dark:border-red-800/30">
+                     <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                     {modalError}
+                   </div>
+                 )}
+
+                 <button
+                   type="submit"
+                   disabled={submitting}
+                   className="btn-primary w-full py-6 rounded-[2rem] font-black text-lg shadow-2xl dark:shadow-none shadow-crimson-100 active:scale-95 transition-all disabled:opacity-60 flex items-center justify-center gap-3"
+                 >
+                   {submitting
+                     ? <><RefreshCw className="w-5 h-5 animate-spin" /> Broadcasting...</>
+                     : "Broadcast Request"}
                  </button>
               </form>
            </div>

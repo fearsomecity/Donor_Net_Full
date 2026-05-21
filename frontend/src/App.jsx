@@ -14,6 +14,8 @@ import HospitalDonate from './pages/HospitalDonate';
 import DonorEligibility from './pages/DonorEligibility';
 import DonorNeeds from './pages/DonorNeeds';
 import AIAssistant from './pages/AIAssistant';
+import HospitalTransfer from './pages/HospitalTransfer';
+import AdminDashboard from './pages/AdminDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 
 export default function App() {
@@ -39,14 +41,12 @@ export default function App() {
             <Route path="/hospital/inventory" element={<ProtectedRoute allowedRole="hospital"><HospitalInventory /></ProtectedRoute>} />
             <Route path="/hospital/requests" element={<ProtectedRoute allowedRole="hospital"><HospitalRequests /></ProtectedRoute>} />
             <Route path="/hospital/donate" element={<ProtectedRoute allowedRole="hospital"><HospitalDonate /></ProtectedRoute>} />
+            <Route path="/hospital/transfer" element={<ProtectedRoute allowedRole="hospital"><HospitalTransfer /></ProtectedRoute>} />
             
-            {/* Shared Authenticated Routes */}
-            <Route path="/ai-assistant" element={
-              <ProtectedRoute allowedRole="donor">
-                <AIAssistant />
-              </ProtectedRoute>
-            } />
-            {/* We can just not pass allowedRole if we want it for both, wait ProtectedRoute needs allowedRole. Let me make it just check if user exists. We'll add two routes or we can update ProtectedRoute to accept an array, or just not check role if not passed. Since the original ProtectedRoute required a string, I'll just render it outside of ProtectedRoute or copy the component without allowedRole. Actually, better yet: just duplicate it. */}
+            {/* Admin Routes */}
+            <Route path="/admin/dashboard" element={<ProtectedRoute allowedRole="admin"><AdminDashboard /></ProtectedRoute>} />
+
+            {/* AI Assistant */}
             <Route path="/donor/ai-assistant" element={<ProtectedRoute allowedRole="donor"><AIAssistant /></ProtectedRoute>} />
             <Route path="/hospital/ai-assistant" element={<ProtectedRoute allowedRole="hospital"><AIAssistant /></ProtectedRoute>} />
 

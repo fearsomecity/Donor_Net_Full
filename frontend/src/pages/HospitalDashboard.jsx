@@ -1,176 +1,259 @@
 import { useState, useEffect } from 'react';
 import useAuthStore from '../store/authStore';
-import { PlusCircle, ArrowRight, Activity, Database, TrendingUp, CheckCircle, Clock, User } from 'lucide-react';
+import { PlusCircle, ArrowRight, Activity, Database, CheckCircle, Clock, User, Package, Inbox, AlertCircle, ArrowUpDown, Droplets } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import { fetchAPI } from '../utils/apiClient';
+
+const BLOOD_TYPES = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
 
 export default function HospitalDashboard() {
-  const { user } = useAuthStore();
-  const [appointments, setAppointments] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { user, token } = useAuthStore();
+  const [activeTab, setActiveTab] = useState('inventory');
+  const [myRequests, setMyRequests] = useState([]);
+  const [incoming, setIncoming] = useState([]);
+  const [loadingRequests, setLoadingRequests] = useState(false);
+  const [loadingIncoming, setLoadingIncoming] = useState(false);
 
-  useEffect(() => {
-    const fetchTodayAppointments = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const res = await axios.get('/api/hospitals/appointments/today', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setAppointments(res.data);
-      } catch (err) {
-        console.error('Failed to fetch hospital appointments', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchTodayAppointments();
-  }, []);
+  const inventory = user?.profile?.inventory || {};
+  const inventoryTotal = Object.values(inventory).reduce((a, b) => a + b, 0);
 
-  const handleComplete = async (id) => {
-    if (!window.confirm('Mark this appointment as completed and update inventory?')) return;
+  const fetchRequests = async () => {
+    setLoadingRequests(true);
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(`/api/hospitals/appointments/${id}/complete`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setAppointments(prev => prev.filter(a => a._id !== id));
-      alert('Success! Records and inventory updated.');
-    } catch (err) {
-      alert('Error updating records');
-    }
+      const res = await fetchAPI('/api/requests/hospital', { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      setMyRequests(Array.isArray(data) ? data : []);
+    } catch (e) { console.error(e); }
+    finally { setLoadingRequests(false); }
   };
 
-  const inventoryTotal = Object.values(user?.profile?.inventory || {}).reduce((a, b) => a + b, 0);
+  const fetchIncoming = async () => {
+    setLoadingIncoming(true);
+    try {
+      const res = await fetchAPI('/api/requests/incoming', { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      setIncoming(Array.isArray(data) ? data : []);
+    } catch (e) { console.error(e); }
+    finally { setLoadingIncoming(false); }
+  };
+
+  useEffect(() => {
+    if (token) {
+      if (activeTab === 'requests') fetchRequests();
+      if (activeTab === 'incoming') fetchIncoming();
+    }
+  }, [activeTab, token]);
+
+  const tabs = [
+    { id: 'inventory', label: 'Inventory', icon: Database },
+    { id: 'requests', label: 'Active Requests', icon: Activity },
+    { id: 'incoming', label: 'Incoming Offers', icon: Inbox },
+  ];
 
   return (
     <div className="relative min-h-screen bg-neutral-50/50 dark:bg-[#0a0a0a] pt-32 pb-20 px-6 overflow-hidden">
-      {/* Aesthetic Background Elements */}
-      <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-crimson-100/30 rounded-full blur-[100px] animate-float dark:hidden dark:hidden" />
+      <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-crimson-100/30 rounded-full blur-[100px] animate-float dark:hidden" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-50/50 rounded-full blur-[100px] animate-float dark:hidden" style={{ animationDelay: '2s' }} />
 
       <div className="relative max-w-6xl mx-auto z-10">
-        <header className="mb-16 animate-fade-in-up">
+        <header className="mb-12 animate-fade-in-up">
           <div className="inline-flex items-center gap-2 bg-neutral-900 dark:bg-[#141414] text-white text-[10px] font-bold px-3 py-1 rounded-full mb-6 tracking-widest uppercase shadow-lg">
-            <Activity className="w-3 h-3 text-crimson-500" />
-            Hospital Operations Control
+            <Activity className="w-3 h-3 text-crimson-500" /> Hospital Operations
           </div>
-          <h1 className="text-5xl md:text-7xl font-black text-neutral-900 dark:text-white tracking-tightest mb-4 font-header">
-            Welcome, <span className="text-gradient">{user?.profile?.hospitalName || 'Partner'}</span>
-          </h1>
-          <p className="text-xl text-neutral-500 max-w-2xl font-medium">
-            Manage your critical blood supplies and coordinate life-saving transfers with real-time analytics.
-          </p>
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div>
+              <h1 className="text-5xl md:text-6xl font-black text-neutral-900 dark:text-white tracking-tightest mb-3 font-header">
+                Welcome, <span className="text-gradient">{user?.profile?.hospitalName || 'Partner'}</span>
+              </h1>
+              <p className="text-lg text-neutral-500 font-medium">Manage your blood supplies and coordinate transfers in real-time.</p>
+            </div>
+            {/* Quick stats */}
+            <div className="flex gap-4">
+              <div className="glass px-6 py-4 rounded-2xl text-center">
+                <p className="text-2xl font-black font-header text-crimson-600">{inventoryTotal}</p>
+                <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">Total Units</p>
+              </div>
+              <div className="glass px-6 py-4 rounded-2xl text-center">
+                <p className="text-2xl font-black font-header text-neutral-900 dark:text-white">{myRequests.length || '—'}</p>
+                <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">Active Req.</p>
+              </div>
+            </div>
+          </div>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-          <DashboardCard 
-            icon={<Database className="w-8 h-8" />}
-            title="Blood Inventory"
-            value={`${inventoryTotal} Units`}
-            desc="Current stock levels across all blood types. Optimized for urgent needs."
-            link="/hospital/inventory"
-            highlight
-          />
-          <DashboardCard 
-            icon={<PlusCircle className="w-8 h-8" />}
-            title="Active Requests"
-            value="Manage"
-            desc="Post or view outbound requests for rare blood types."
-            link="/hospital/requests"
-          />
-          <DashboardCard 
-            icon={<TrendingUp className="w-8 h-8" />}
-            title="Fulfillment"
-            value="100%"
-            desc="Your hospital's efficiency in meeting critical patient needs."
-            link="/hospital/dashboard"
-          />
+        {/* Tab Navigation */}
+        <div className="flex gap-2 mb-8 p-1.5 bg-white dark:bg-[#141414] rounded-2xl border border-neutral-100 dark:border-[#2a2a2a] w-fit animate-fade-in-up">
+          {tabs.map(tab => {
+            const Icon = tab.icon;
+            return (
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold transition-all ${
+                  activeTab === tab.id
+                    ? 'bg-neutral-900 dark:bg-crimson-600 text-white shadow-md'
+                    : 'text-neutral-500 hover:text-neutral-800 dark:hover:text-white'
+                }`}>
+                <Icon className="w-4 h-4" />
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-          <div className="glass p-10 rounded-[2.5rem] flex flex-col">
-            <h2 className="text-2xl font-bold text-neutral-900 dark:text-white mb-6 font-header">Today's Scheduled Donors</h2>
-            <div className="space-y-4 flex-1">
-              {loading ? (
-                <div className="p-8 text-center animate-pulse text-neutral-400 font-bold uppercase tracking-widest">Loading...</div>
-              ) : appointments.length > 0 ? (
-                appointments.map(app => (
-                  <ScheduleItem 
-                    key={app._id}
-                    donorName={app.donorId?.donorProfile?.name || 'Anonymous Donor'}
-                    bloodType={app.bloodType}
-                    time={app.time}
-                    onComplete={() => handleComplete(app._id)}
-                  />
-                ))
-              ) : (
-                <div className="p-12 border-2 border-dashed border-neutral-100 dark:border-[#2a2a2a] rounded-3xl text-center">
-                  <p className="text-sm font-bold text-neutral-400 uppercase tracking-widest">No donors scheduled for today</p>
-                </div>
-              )}
+        {/* ── Tab: Inventory ── */}
+        {activeTab === 'inventory' && (
+          <div className="animate-fade-in-up">
+            <div className="glass rounded-[2.5rem] p-10">
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-2xl font-bold text-neutral-900 dark:text-white font-header flex items-center gap-3">
+                  <Database className="w-6 h-6 text-crimson-600" /> Blood Inventory
+                </h2>
+                <Link to="/hospital/inventory" className="text-sm font-bold text-crimson-600 hover:underline flex items-center gap-1">
+                  Manage Stock <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {BLOOD_TYPES.map(type => {
+                  const units = inventory[type] || 0;
+                  const level = units === 0 ? 'critical' : units < 5 ? 'low' : 'ok';
+                  return (
+                    <div key={type} className={`p-5 rounded-2xl border-2 text-center transition-all ${
+                      level === 'critical' ? 'border-red-200 bg-red-50/50 dark:bg-red-900/10 dark:border-red-800/30'
+                      : level === 'low' ? 'border-amber-200 bg-amber-50/50 dark:bg-amber-900/10 dark:border-amber-800/30'
+                      : 'border-neutral-100 dark:border-[#2a2a2a] bg-white dark:bg-[#141414]'
+                    }`}>
+                      <div className={`text-2xl font-black font-header mb-1 ${
+                        level === 'critical' ? 'text-red-600' : level === 'low' ? 'text-amber-600' : 'text-neutral-900 dark:text-white'
+                      }`}>{type}</div>
+                      <div className="text-3xl font-black text-neutral-900 dark:text-white">{units}</div>
+                      <div className={`text-[9px] font-bold uppercase tracking-widest mt-1 ${
+                        level === 'critical' ? 'text-red-500' : level === 'low' ? 'text-amber-500' : 'text-neutral-400'
+                      }`}>{level === 'critical' ? 'OUT OF STOCK' : level === 'low' ? 'LOW STOCK' : 'units'}</div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="mt-8 flex gap-4">
+                <Link to="/hospital/inventory" className="btn-primary flex items-center gap-2 px-6 py-3 rounded-xl text-sm">
+                  <Package className="w-4 h-4" /> Update Inventory
+                </Link>
+                <Link to="/hospital/transfer" className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold border-2 border-neutral-200 dark:border-[#2a2a2a] text-neutral-700 dark:text-neutral-300 hover:border-crimson-200 transition-all">
+                  <ArrowUpDown className="w-4 h-4" /> B2B Transfer
+                </Link>
+              </div>
             </div>
           </div>
+        )}
 
-          <div className="glass p-10 rounded-[2.5rem]">
-            <h2 className="text-2xl font-bold text-neutral-900 dark:text-white mb-6 font-header">AI Support Center</h2>
-            <div className="bg-neutral-900 dark:bg-[#141414] rounded-3xl p-8 text-white relative overflow-hidden group h-full flex flex-col justify-between">
-              <div className="absolute bottom-0 right-0 w-48 h-48 bg-crimson-600/30 blur-3xl group-hover:scale-150 transition-transform duration-700" />
-              <p className="text-lg font-medium mb-8 relative z-10">
-                Optimize your inventory management with AI-driven demand forecasting and supply matching.
-              </p>
-              <Link to="/hospital/ai-assistant" className="btn-primary inline-flex items-center gap-2 self-start relative z-10">
-                Open AI Dashboard <ArrowRight className="w-4 h-4" />
-              </Link>
+        {/* ── Tab: Active Requests ── */}
+        {activeTab === 'requests' && (
+          <div className="animate-fade-in-up">
+            <div className="glass rounded-[2.5rem] overflow-hidden">
+              <div className="p-10 border-b border-neutral-100 dark:border-[#2a2a2a] flex items-center justify-between bg-white/50 dark:bg-transparent">
+                <h2 className="text-2xl font-bold text-neutral-900 dark:text-white font-header flex items-center gap-3">
+                  <AlertCircle className="w-6 h-6 text-crimson-600" /> Active Broadcasts
+                </h2>
+                <Link to="/hospital/requests" className="btn-primary flex items-center gap-2 px-5 py-3 rounded-xl text-sm">
+                  <PlusCircle className="w-4 h-4" /> New Request
+                </Link>
+              </div>
+              <div className="p-8">
+                {loadingRequests ? (
+                  <div className="p-12 text-center text-neutral-400 font-bold uppercase tracking-widest text-[10px] animate-pulse">Loading...</div>
+                ) : myRequests.length === 0 ? (
+                  <div className="p-12 text-center border-2 border-dashed border-neutral-100 dark:border-[#2a2a2a] rounded-3xl">
+                    <p className="text-neutral-400 font-bold">No active requests. Your inventory levels are stable.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {myRequests.map(req => (
+                      <div key={req._id} className="flex items-center justify-between p-6 bg-white dark:bg-[#141414] rounded-2xl border border-neutral-100 dark:border-[#2a2a2a]">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-14 h-14 rounded-2xl flex flex-col items-center justify-center font-black ${req.urgencyLevel === 'critical' ? 'bg-red-600 text-white' : 'bg-crimson-50 text-crimson-600'}`}>
+                            <Droplets className="w-4 h-4 mb-0.5" />
+                            <span className="text-sm font-header">{req.bloodType}</span>
+                          </div>
+                          <div>
+                            <p className="font-bold text-neutral-900 dark:text-white">{req.unitsNeeded} units needed</p>
+                            <p className="text-[10px] text-neutral-400 uppercase tracking-widest">{req.urgencyLevel} priority · {new Date(req.createdAt).toLocaleDateString()}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Donors Accepted</p>
+                          <p className="text-xl font-black text-crimson-600 font-header">{req.acceptedDonors?.length || 0}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+        )}
 
-function DashboardCard({ icon, title, value, desc, link, highlight = false }) {
-  return (
-    <Link to={link} className={`group glass p-10 rounded-[2.5rem] transition-all duration-500 hover:-translate-y-2 ${highlight ? 'border-crimson-100 shadow-xl dark:shadow-none shadow-crimson-100/10' : ''}`}>
-      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-8 transition-all duration-500 ${highlight ? 'bg-crimson-600 text-white shadow-lg shadow-crimson-200' : 'bg-neutral-100 text-neutral-600 group-hover:bg-crimson-50 group-hover:text-crimson-600'}`}>
-        {icon}
-      </div>
-      <h3 className="text-sm font-bold text-neutral-400 uppercase tracking-widest mb-2">{title}</h3>
-      <div className="text-3xl font-black text-neutral-900 dark:text-white mb-4 font-header">{value}</div>
-      <p className="text-sm font-medium text-neutral-500 leading-relaxed mb-6">
-        {desc}
-      </p>
-      <div className="flex items-center gap-2 text-xs font-bold text-crimson-600 uppercase tracking-widest group-hover:gap-4 transition-all">
-        Operational View <ArrowRight className="w-3 h-3" />
-      </div>
-    </Link>
-  );
-}
-
-function ScheduleItem({ donorName, bloodType, time, onComplete }) {
-  return (
-    <div className="flex items-center justify-between p-6 bg-white dark:bg-[#141414] rounded-2xl border border-neutral-100 dark:border-[#2a2a2a] shadow-sm dark:shadow-none hover:border-crimson-100 transition-all group">
-      <div className="flex items-center gap-4">
-        <div className="w-12 h-12 rounded-2xl bg-neutral-50 dark:bg-[#0a0a0a] flex items-center justify-center text-neutral-400 group-hover:bg-crimson-50 group-hover:text-crimson-600 transition-colors">
-          <User className="w-6 h-6" />
-        </div>
-        <div>
-          <h4 className="font-bold text-neutral-900 dark:text-white">{donorName}</h4>
-          <div className="flex items-center gap-2 mt-1">
-            <span className="text-[10px] font-bold text-crimson-600 bg-crimson-50 px-2 py-0.5 rounded-full">{bloodType}</span>
-            <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-1">
-              <Clock className="w-3 h-3" /> {time}
-            </span>
+        {/* ── Tab: Incoming Offers ── */}
+        {activeTab === 'incoming' && (
+          <div className="animate-fade-in-up">
+            <div className="glass rounded-[2.5rem] overflow-hidden">
+              <div className="p-10 border-b border-neutral-100 dark:border-[#2a2a2a] bg-white/50 dark:bg-transparent">
+                <h2 className="text-2xl font-bold text-neutral-900 dark:text-white font-header flex items-center gap-3">
+                  <Inbox className="w-6 h-6 text-crimson-600" /> Donor Offers Received
+                </h2>
+                <p className="text-neutral-400 text-sm mt-1">Donors who have accepted your emergency requests. Contact them or scan their token at reception.</p>
+              </div>
+              <div className="p-8">
+                {loadingIncoming ? (
+                  <div className="p-12 text-center text-neutral-400 font-bold uppercase tracking-widest text-[10px] animate-pulse">Loading...</div>
+                ) : incoming.length === 0 ? (
+                  <div className="p-12 text-center border-2 border-dashed border-neutral-100 dark:border-[#2a2a2a] rounded-3xl">
+                    <p className="text-neutral-400 font-bold">No incoming offers yet.</p>
+                    <p className="text-sm text-neutral-300 mt-2">Donors will appear here once they accept an emergency request.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {incoming.map(req => (
+                      <div key={req._id}>
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 rounded-xl bg-crimson-50 text-crimson-600 flex items-center justify-center font-black text-sm">{req.bloodType}</div>
+                          <div>
+                            <p className="font-bold text-neutral-800 dark:text-white text-sm">{req.bloodType} · {req.unitsNeeded} units needed</p>
+                            <p className="text-[10px] text-neutral-400 uppercase tracking-widest">{req.acceptedDonors?.length} donor{req.acceptedDonors?.length !== 1 ? 's' : ''} accepted</p>
+                          </div>
+                        </div>
+                        <div className="space-y-2 pl-2">
+                          {req.acceptedDonors?.map(donor => (
+                            <div key={donor._id} className="flex items-center justify-between p-4 bg-white dark:bg-[#141414] rounded-xl border border-neutral-100 dark:border-[#2a2a2a]">
+                              <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-xl bg-neutral-50 dark:bg-[#0a0a0a] flex items-center justify-center text-neutral-400">
+                                  <User className="w-4 h-4" />
+                                </div>
+                                <div>
+                                  <p className="font-bold text-neutral-900 dark:text-white text-sm">{donor.donorName}</p>
+                                  <p className="text-[10px] text-neutral-400 flex items-center gap-1">
+                                    <Clock className="w-3 h-3" /> {new Date(donor.acceptedAt).toLocaleDateString()}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-[10px] text-neutral-400 uppercase tracking-widest mb-1">Token</p>
+                                <code className="bg-crimson-50 dark:bg-crimson-900/20 text-crimson-700 dark:text-crimson-400 px-2 py-1 rounded-lg font-mono font-black text-sm tracking-widest">
+                                  {donor.donationToken}
+                                </code>
+                                <p className={`text-[9px] uppercase tracking-widest font-bold mt-1 ${donor.donationStatus === 'donated' ? 'text-green-600' : 'text-amber-500'}`}>
+                                  {donor.donationStatus}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
-      <button 
-        onClick={onComplete}
-        className="w-10 h-10 rounded-full bg-neutral-50 dark:bg-[#0a0a0a] flex items-center justify-center text-neutral-300 hover:bg-green-600 hover:text-white transition-all shadow-sm dark:shadow-none"
-        title="Mark as Complete"
-      >
-        <CheckCircle className="w-5 h-5" />
-      </button>
     </div>
   );
 }

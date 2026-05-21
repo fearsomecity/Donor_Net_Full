@@ -5,7 +5,7 @@ export default function Footer() {
   return (
     <footer className="bg-white dark:bg-[#0a0a0a] border-t border-neutral-100 dark:border-transparent pt-20 pb-10 px-8 relative overflow-hidden transition-colors duration-300">
       {/* Decorative Blobs */}
-      <div className="absolute bottom-[-10%] left-[-5%] w-[30%] h-[50%] bg-crimson-50/50 rounded-full blur-[80px] dark:hidden dark:hidden" />
+      <div className="absolute bottom-[-10%] left-[-5%] w-[30%] h-[50%] bg-crimson-50/50 rounded-full blur-[80px] dark:hidden" />
       
       <div className="max-w-6xl mx-auto relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">

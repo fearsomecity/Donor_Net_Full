@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MapPin, AlertCircle, RefreshCw, Droplets, ArrowRight, Heart, Calendar, Hospital } from 'lucide-react';
+import { MapPin, AlertCircle, RefreshCw, Droplets, ArrowRight, Heart, Calendar, Building2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import { fetchAPI } from '../utils/apiClient';
@@ -12,16 +12,22 @@ export default function DonorNeeds() {
   useEffect(() => {
     const fetchRequests = async () => {
       try {
-        const res = await fetchAPI(`/api/requests/nearby?zipCode=${user?.profile?.zipCode || '90210'}`);
+        const zipCode = user?.profile?.zipCode;
+        if (!zipCode) { setLoading(false); return; }
+        const res = await fetchAPI(`/api/requests/nearby?zipCode=${zipCode}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         const data = await res.json();
-        setUrgentRequests(data);
+        setUrgentRequests(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error('Error fetching data:', err);
+        setUrgentRequests([]);
       } finally {
         setLoading(false);
       }
     };
     if (token) fetchRequests();
+    else setLoading(false);
   }, [token, user]);
 
   const navigate = useNavigate();
@@ -55,8 +61,8 @@ export default function DonorNeeds() {
   return (
     <div className="relative min-h-screen bg-neutral-50/50 dark:bg-[#0a0a0a] pt-32 pb-20 px-6 overflow-hidden">
       {/* Aesthetic Background Elements */}
-      <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-crimson-100/30 rounded-full blur-[100px] animate-float dark:hidden dark:hidden" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-crimson-50/30 rounded-full blur-[100px] animate-float dark:hidden dark:hidden" style={{ animationDelay: '2s' }} />
+      <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-crimson-100/30 rounded-full blur-[100px] animate-float dark:hidden" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-crimson-50/30 rounded-full blur-[100px] animate-float dark:hidden" style={{ animationDelay: '2s' }} />
 
       <div className="relative max-w-6xl mx-auto z-10">
         <header className="mb-16 animate-fade-in-up">
@@ -111,7 +117,7 @@ export default function DonorNeeds() {
                         </div>
                         <div className="flex-1">
                            <div className="flex items-center gap-2 text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">
-                              <Hospital className="w-3 h-3" /> Requested By
+                              <Building2 className="w-3 h-3" /> Requested By
                            </div>
                            <h4 className="text-xl font-bold text-neutral-900 dark:text-white font-header line-clamp-1 mb-2">{req.hospitalName}</h4>
                            <div className="flex items-center gap-2 text-sm font-bold text-crimson-600">
