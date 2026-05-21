@@ -4,14 +4,10 @@
   "description": "DonorNet Microservices Platform",
   "main": "index.js",
   "scripts": {
-    "start:auth": "cd backend/auth-service && node server.js",
-    "start:donor": "cd backend/donor-service && node server.js",
-    "start:hospital": "cd backend/hospital-service && node server.js",
-    "start:request": "cd backend/request-service && node server.js",
-    "start:gateway": "cd backend/api-gateway && node server.js",
-    "start:frontend": "cd frontend && npm run dev",
     "start:backend": "cd backend && npm start",
-    "start": "npx concurrently -n \"BACKEND,FRONTEND\" -c \"white,red\" \"npm run start:backend\" \"npm run start:frontend\""
+    "start:frontend": "cd frontend && npm run dev",
+    "start": "npx concurrently -n \"BACKEND,FRONTEND\" -c \"white,red\" \"npm run start:backend\" \"npm run start:frontend\"",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install"
   },
   "dependencies": {
     "concurrently": "^8.2.2"

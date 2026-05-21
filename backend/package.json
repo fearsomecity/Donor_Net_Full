@@ -4,19 +4,8 @@
   "description": "DonorNet Microservices Backend",
   "main": "index.js",
   "scripts": {
-    "start:auth": "cd auth-service && node --watch server.js",
-    "start:donor": "cd donor-service && node --watch server.js",
-    "start:hospital": "cd hospital-service && node --watch server.js",
-    "start:request": "cd request-service && node --watch server.js",
-    "start:gateway": "cd api-gateway && node --watch server.js",
-    "start:auth:prod": "cd auth-service && PORT=5001 node server.js",
-    "start:donor:prod": "cd donor-service && PORT=5002 node server.js",
-    "start:hospital:prod": "cd hospital-service && PORT=5003 node server.js",
-    "start:request:prod": "cd request-service && PORT=5004 node server.js",
-    "start:gateway:prod": "cd api-gateway && node server.js",
     "start": "node --watch index.js",
-    "start:prod": "node index.js",
-    "postinstall": "npm install --prefix api-gateway && npm install --prefix auth-service && npm install --prefix donor-service && npm install --prefix hospital-service && npm install --prefix request-service"
+    "start:prod": "node index.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

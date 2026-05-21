@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: donornet-backend
+    env: node
+    plan: free
+    
+    # Build configuration
+    buildCommand: |
+      cd backend && npm install
+    
+    # Start command
+    startCommand: cd backend && npm run start:prod
+    
+    # Root directory
+    rootDir: .
+    
+    # Environment variables
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+
